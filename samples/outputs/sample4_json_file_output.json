@@ -1,0 +1,61 @@
+{
+  "word_count": 29,
+  "sentence_count": 2,
+  "keyword_frequency": {
+    "process": 1,
+    "analyze": 1,
+    "project": 1,
+    "configuration": 1,
+    "file": 1,
+    "task": 1,
+    "build": 1,
+    "classification": 1,
+    "pipeline": 1,
+    "requirements": 1,
+    "extract": 1,
+    "features": 1,
+    "train": 1,
+    "model": 1,
+    "deploy": 1
+  },
+  "technical_terms": [
+    "classification",
+    "deploy",
+    "deterministic",
+    "docker",
+    "endpoint",
+    "fastapi",
+    "model",
+    "pipeline",
+    "process"
+  ],
+  "action_verbs": [
+    "analyze",
+    "build",
+    "deploy",
+    "extract",
+    "process"
+  ],
+  "sections_detected": [
+    "constraint",
+    "requirement"
+  ],
+  "step_patterns": {
+    "numbered_steps": 0,
+    "bulleted_items": 0,
+    "arrow_flows": 0,
+    "has_steps": false
+  },
+  "complexity": "medium",
+  "technical_density": 0.3103,
+  "clarity_score": 9.4,
+  "file_processed": "json",
+  "file_extracted_text_preview": "task: Build a classification pipeline requirements: extract features train model deploy endpoint tech_stack: fastapi sklearn docker constraints: Must be deterministic, no randomness",
+  "signals": {
+    "has_technical_content": true,
+    "has_action_items": true,
+    "is_structured": true,
+    "has_step_patterns": false,
+    "input_length_category": "short"
+  }
+}

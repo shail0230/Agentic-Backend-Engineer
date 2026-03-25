@@ -1,0 +1,5 @@
+Implement a transformer-based neural network with LSTM layers for NLP classification.
+Use FastAPI endpoint for inference. Deploy with Docker on Kubernetes.
+Configure JWT authentication. Optimize gradient descent with hyperparameter tuning.
+Monitor with logging and benchmark latency throughput scalability.
+Use Redis cache and Celery queue for async processing pipeline.

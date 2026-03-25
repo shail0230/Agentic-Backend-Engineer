@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Task Review Agent — Pipeline</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #07090f;
+  --surface: #0e1117;
+  --card: #121720;
+  --border: #1c2535;
+  --border2: #243045;
+  --accent: #3b82f6;
+  --accent-glow: rgba(59,130,246,0.15);
+  --green: #22c55e;
+  --yellow: #f59e0b;
+  --red: #ef4444;
+  --purple: #a855f7;
+  --text: #dde4f0;
+  --muted: #4b5a70;
+  --muted2: #8898a8;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* scanline effect */
+body::after{
+  content:'';
+  position:fixed;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);
+  pointer-events:none;z-index:9999;
+}
+
+.wrap{max-width:1200px;margin:0 auto;padding:0 28px;}
+
+/* ── Header ── */
+header{
+  padding:28px 0 20px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:36px;
+}
+.hdr{display:flex;align-items:center;justify-content:space-between;}
+.logo{
+  font-family:var(--mono);
+  font-size:15px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;
+  color:var(--text);
+}
+.logo span{color:var(--accent);}
+.logo sub{
+  font-size:9px;letter-spacing:1px;
+  color:var(--muted2);vertical-align:middle;margin-left:8px;
+  font-weight:400;
+}
+.status-dot{
+  display:flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:11px;color:var(--green);
+  letter-spacing:1px;
+}
+.dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 8px var(--green);
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+/* ── Grid ── */
+.grid{display:grid;grid-template-columns:420px 1fr;gap:28px;align-items:start;}
+
+/* ── Panel ── */
+.panel{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:26px;
+}
+.panel-hdr{
+  font-family:var(--mono);
+  font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--accent);margin-bottom:22px;
+  display:flex;align-items:center;gap:10px;
+}
+.panel-hdr::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ── Form ── */
+.fg{margin-bottom:16px;}
+label{
+  display:block;font-family:var(--mono);
+  font-size:10px;color:var(--muted2);
+  letter-spacing:1.2px;text-transform:uppercase;
+  margin-bottom:7px;
+}
+textarea,select,input[type=text]{
+  width:100%;background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:8px;color:var(--text);
+  font-family:var(--sans);font-size:13px;
+  padding:10px 13px;outline:none;
+  transition:border-color .2s,box-shadow .2s;
+}
+textarea{resize:vertical;min-height:130px;line-height:1.6;}
+textarea:focus,select:focus,input:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-glow);
+}
+select option{background:var(--surface);}
+
+/* file drop */
+.drop{
+  border:1.5px dashed var(--border2);
+  border-radius:10px;padding:20px;
+  text-align:center;cursor:pointer;
+  position:relative;
+  transition:border-color .2s,background .2s;
+}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-glow);}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.drop-icon{font-size:24px;margin-bottom:6px;}
+.drop-lbl{font-size:12px;color:var(--muted2);}
+.drop-lbl b{color:var(--accent);}
+.drop-note{font-size:11px;color:var(--muted);margin-top:4px;}
+.file-ok{font-family:var(--mono);font-size:11px;color:var(--green);margin-top:8px;}
+
+/* submit */
+.btn{
+  width:100%;
+  background:var(--accent);
+  color:#fff;border:none;
+  border-radius:9px;padding:13px;
+  font-family:var(--mono);font-size:12px;
+  letter-spacing:1.5px;text-transform:uppercase;
+  cursor:pointer;margin-top:8px;
+  transition:background .2s,transform .1s,box-shadow .2s;
+  box-shadow:0 0 0 0 var(--accent-glow);
+}
+.btn:hover{background:#2563eb;box-shadow:0 0 20px var(--accent-glow);}
+.btn:active{transform:scale(.99);}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+
+/* ── Results pane ── */
+.results-empty{
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  min-height:320px;
+  color:var(--muted);
+  font-family:var(--mono);font-size:12px;
+  letter-spacing:1px;
+  border:1px dashed var(--border);
+  border-radius:14px;
+  gap:12px;
+}
+.results-empty .big{font-size:36px;}
+
+/* output panel */
+#output{display:none;}
+
+/* Metric grid */
+.metrics{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;margin-bottom:20px;
+}
+.metric{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:14px 16px;
+}
+.metric-lbl{
+  font-family:var(--mono);font-size:9px;
+  color:var(--muted2);letter-spacing:1.2px;
+  text-transform:uppercase;margin-bottom:6px;
+}
+.metric-val{
+  font-family:var(--mono);font-size:24px;
+  font-weight:700;
+}
+.metric-val.blue{color:var(--accent);}
+.metric-val.green{color:var(--green);}
+.metric-val.yellow{color:var(--yellow);}
+.metric-val.red{color:var(--red);}
+.metric-val.purple{color:var(--purple);}
+
+/* Sections */
+.section-block{margin-bottom:18px;}
+.section-title{
+  font-family:var(--mono);font-size:10px;
+  color:var(--muted2);letter-spacing:1.5px;
+  text-transform:uppercase;margin-bottom:10px;
+  padding-bottom:6px;border-bottom:1px solid var(--border);
+}
+
+/* Tags */
+.tags{display:flex;flex-wrap:wrap;gap:7px;}
+.tag{
+  font-family:var(--mono);font-size:11px;
+  padding:4px 10px;border-radius:20px;
+  border:1px solid;
+}
+.tag-blue{border-color:var(--accent);color:var(--accent);background:rgba(59,130,246,.08);}
+.tag-green{border-color:var(--green);color:var(--green);background:rgba(34,197,94,.08);}
+.tag-yellow{border-color:var(--yellow);color:var(--yellow);background:rgba(245,158,11,.08);}
+.tag-purple{border-color:var(--purple);color:var(--purple);background:rgba(168,85,247,.08);}
+.tag-muted{border-color:var(--border2);color:var(--muted2);}
+
+/* Signal row */
+.signals-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.signal-row{
+  display:flex;align-items:center;gap:10px;
+  font-size:12px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:8px;padding:8px 12px;
+}
+.signal-icon{font-size:14px;}
+.signal-lbl{flex:1;color:var(--muted2);}
+.signal-val{font-family:var(--mono);font-size:11px;font-weight:600;}
+.sig-true{color:var(--green);}
+.sig-false{color:var(--muted);}
+
+/* Bar chart for keyword freq */
+.kw-list{display:flex;flex-direction:column;gap:6px;}
+.kw-row{display:flex;align-items:center;gap:10px;}
+.kw-word{
+  font-family:var(--mono);font-size:11px;
+  color:var(--text);width:110px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.kw-bar-wrap{flex:1;background:var(--border);border-radius:4px;height:6px;overflow:hidden;}
+.kw-bar{
+  height:100%;border-radius:4px;
+  background:linear-gradient(90deg,var(--accent),var(--purple));
+  transition:width .6s ease;
+}
+.kw-count{
+  font-family:var(--mono);font-size:10px;
+  color:var(--muted2);width:20px;text-align:right;
+}
+
+/* JSON view */
+.json-box{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:14px;
+  font-family:var(--mono);font-size:11px;
+  line-height:1.7;
+  overflow-x:auto;
+  white-space:pre-wrap;
+  word-break:break-all;
+  color:var(--muted2);
+  max-height:260px;
+  overflow-y:auto;
+}
+
+/* file preview */
+.file-preview{
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-left:3px solid var(--accent);
+  border-radius:8px;
+  padding:12px 14px;
+  font-size:12px;
+  color:var(--muted2);
+  line-height:1.6;
+  margin-top:8px;
+  font-family:var(--mono);
+}
+
+/* clarity bar */
+.clarity-bar-wrap{
+  background:var(--border);border-radius:6px;
+  height:8px;overflow:hidden;margin-top:6px;
+}
+.clarity-bar{
+  height:100%;border-radius:6px;
+  transition:width .8s ease;
+}
+
+/* spinner */
+.spinner{
+  width:18px;height:18px;
+  border:2px solid rgba(255,255,255,.2);
+  border-top-color:white;
+  border-radius:50%;
+  animation:spin .6s linear infinite;
+  display:inline-block;vertical-align:middle;margin-right:8px;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* error */
+.error-box{
+  background:#1a0b0b;border:1px solid var(--red);
+  border-radius:10px;padding:14px 16px;
+  font-family:var(--mono);font-size:12px;color:var(--red);
+}
+
+@media(max-width:860px){
+  .grid{grid-template-columns:1fr;}
+  .metrics{grid-template-columns:repeat(2,1fr);}
+  .signals-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="hdr">
+    <div class="logo">Task<span>Review</span> Agent <sub>PIPELINE v1.0</sub></div>
+    <div class="status-dot"><div class="dot"></div> DETERMINISTIC</div>
+  </div>
+</header>
+
+<div class="grid">
+
+  <!-- ── Input Form ── -->
+  <div class="panel">
+    <div class="panel-hdr">Input</div>
+    <form id="pipelineForm">
+
+      <div class="fg">
+        <label>Task Description *</label>
+        <textarea name="text" id="textInput" placeholder="Describe the task. e.g. Build a FastAPI pipeline to extract technical keywords from a JSON dataset using NLP preprocessing..." required></textarea>
+      </div>
+
+      <div class="fg">
+        <label>Attach File — optional (PDF or JSON)</label>
+        <div class="drop" id="dropZone">
+          <input type="file" name="file" id="fileInput" accept=".pdf,.json"/>
+          <div class="drop-icon">📂</div>
+          <div class="drop-lbl">Drop file or <b>click to browse</b></div>
+          <div class="drop-note">Supports: .pdf · .json</div>
+          <div class="file-ok" id="fileName"></div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn" id="submitBtn">
+        ▶ &nbsp;Run Pipeline
+      </button>
+
+    </form>
+  </div>
+
+  <!-- ── Output ── -->
+  <div>
+    <!-- empty state -->
+    <div class="results-empty" id="emptyState">
+      <div class="big">⚙️</div>
+      <div>AWAITING INPUT</div>
+      <div style="font-size:10px;color:var(--muted)">Submit text to start the pipeline</div>
+    </div>
+
+    <!-- results -->
+    <div id="output">
+
+      <!-- Key metrics -->
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-lbl">Word Count</div>
+          <div class="metric-val blue" id="mWords">—</div>
+        </div>
+        <div class="metric">
+          <div class="metric-lbl">Sentences</div>
+          <div class="metric-val blue" id="mSents">—</div>
+        </div>
+        <div class="metric">
+          <div class="metric-lbl">Complexity</div>
+          <div class="metric-val" id="mComplex">—</div>
+        </div>
+        <div class="metric">
+          <div class="metric-lbl">Clarity Score</div>
+          <div class="metric-val green" id="mClarity">—</div>
+          <div class="clarity-bar-wrap"><div class="clarity-bar" id="clarityBar" style="width:0%"></div></div>
+        </div>
+        <div class="metric">
+          <div class="metric-lbl">Tech Density</div>
+          <div class="metric-val purple" id="mDensity">—</div>
+        </div>
+        <div class="metric">
+          <div class="metric-lbl">File</div>
+          <div class="metric-val" id="mFile" style="font-size:14px">—</div>
+        </div>
+      </div>
+
+      <!-- Signals -->
+      <div class="section-block">
+        <div class="section-title">Signals</div>
+        <div class="signals-grid" id="signalsGrid"></div>
+      </div>
+
+      <!-- Technical Terms + Action Verbs -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
+        <div class="section-block" style="margin:0">
+          <div class="section-title">Technical Terms</div>
+          <div class="tags" id="techTerms"></div>
+        </div>
+        <div class="section-block" style="margin:0">
+          <div class="section-title">Action Verbs</div>
+          <div class="tags" id="actionVerbs"></div>
+        </div>
+      </div>
+
+      <!-- Sections + Steps -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
+        <div class="section-block" style="margin:0">
+          <div class="section-title">Sections Detected</div>
+          <div class="tags" id="sectionsDetected"></div>
+        </div>
+        <div class="section-block" style="margin:0">
+          <div class="section-title">Step Patterns</div>
+          <div id="stepPatterns"></div>
+        </div>
+      </div>
+
+      <!-- Keyword Frequency -->
+      <div class="section-block">
+        <div class="section-title">Keyword Frequency</div>
+        <div class="kw-list" id="kwList"></div>
+      </div>
+
+      <!-- File Preview -->
+      <div id="filePreviewBlock" style="display:none;margin-bottom:18px;">
+        <div class="section-title">Extracted File Text (Preview)</div>
+        <div class="file-preview" id="filePreview"></div>
+      </div>
+
+      <!-- Raw JSON -->
+      <div class="section-block">
+        <div class="section-title">Raw JSON Output</div>
+        <div class="json-box" id="rawJson"></div>
+      </div>
+
+    </div>
+
+    <!-- error -->
+    <div class="error-box" id="errorBox" style="display:none"></div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+const $ = id => document.getElementById(id);
+
+// file zone
+const fileInput = $('fileInput'), dropZone = $('dropZone'), fileName = $('fileName');
+fileInput.addEventListener('change', () => {
+  fileName.textContent = fileInput.files[0] ? '✓ ' + fileInput.files[0].name : '';
+});
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('over');
+  const f = e.dataTransfer.files[0];
+  if (f) {
+    const dt = new DataTransfer(); dt.items.add(f); fileInput.files = dt.files;
+    fileName.textContent = '✓ ' + f.name;
+  }
+});
+
+// submit
+$('pipelineForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = $('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Processing...';
+  $('errorBox').style.display = 'none';
+  $('output').style.display = 'none';
+  $('emptyState').style.display = 'flex';
+
+  const fd = new FormData(e.target);
+  if (!fileInput.files[0]) fd.delete('file');
+
+  try {
+    const res = await fetch('/analyze', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Pipeline error');
+    render(data);
+  } catch(err) {
+    $('errorBox').textContent = '⚠ ' + err.message;
+    $('errorBox').style.display = 'block';
+  }
+  btn.disabled = false;
+  btn.innerHTML = '▶ &nbsp;Run Pipeline';
+});
+
+function render(d) {
+  $('emptyState').style.display = 'none';
+  $('output').style.display = 'block';
+
+  // Metrics
+  $('mWords').textContent = d.word_count;
+  $('mSents').textContent = d.sentence_count;
+
+  const cx = $('mComplex');
+  cx.textContent = d.complexity.toUpperCase();
+  cx.className = 'metric-val ' + {low:'green',medium:'yellow',high:'red'}[d.complexity];
+
+  $('mClarity').textContent = d.clarity_score + ' / 10';
+  const pct = (d.clarity_score / 10 * 100).toFixed(1);
+  const cb = $('clarityBar');
+  cb.style.width = pct + '%';
+  cb.style.background = d.clarity_score >= 7 ? 'var(--green)'
+    : d.clarity_score >= 4 ? 'var(--yellow)' : 'var(--red)';
+
+  $('mDensity').textContent = (d.technical_density * 100).toFixed(1) + '%';
+
+  const mf = $('mFile');
+  if (d.file_processed) {
+    mf.textContent = d.file_processed.toUpperCase();
+    mf.className = 'metric-val ' + (d.file_processed === 'pdf' ? 'yellow' : 'green');
+  } else {
+    mf.textContent = 'none';
+    mf.className = 'metric-val';
+    mf.style.color = 'var(--muted)';
+  }
+
+  // Signals
+  const sigLabels = {
+    has_technical_content: { icon:'🔬', label:'Technical Content' },
+    has_action_items:      { icon:'⚡', label:'Action Items' },
+    is_structured:         { icon:'🗂', label:'Structured' },
+    has_step_patterns:     { icon:'🔢', label:'Step Patterns' },
+    input_length_category: { icon:'📏', label:'Length Category' },
+  };
+  $('signalsGrid').innerHTML = Object.entries(d.signals).map(([k, v]) => {
+    const m = sigLabels[k] || { icon:'•', label: k };
+    const isStr = typeof v === 'string';
+    const cls = isStr ? 'sig-true' : (v ? 'sig-true' : 'sig-false');
+    const val = isStr ? v.toUpperCase() : (v ? 'YES' : 'NO');
+    return `<div class="signal-row">
+      <span class="signal-icon">${m.icon}</span>
+      <span class="signal-lbl">${m.label}</span>
+      <span class="signal-val ${cls}">${val}</span>
+    </div>`;
+  }).join('');
+
+  // Tags helper
+  const makeTags = (arr, cls) => arr.length
+    ? arr.map(t => `<span class="tag ${cls}">${t}</span>`).join('')
+    : '<span style="font-size:12px;color:var(--muted)">none detected</span>';
+
+  $('techTerms').innerHTML = makeTags(d.technical_terms, 'tag-blue');
+  $('actionVerbs').innerHTML = makeTags(d.action_verbs, 'tag-green');
+  $('sectionsDetected').innerHTML = makeTags(d.sections_detected, 'tag-purple');
+
+  // Step patterns
+  const sp = d.step_patterns;
+  $('stepPatterns').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      ${[
+        ['Numbered Steps', sp.numbered_steps],
+        ['Bulleted Items', sp.bulleted_items],
+        ['Arrow Flows →',  sp.arrow_flows],
+      ].map(([l,v]) => `
+        <div style="display:flex;justify-content:space-between;font-size:12px;
+          padding:5px 0;border-bottom:1px solid var(--border);">
+          <span style="color:var(--muted2);font-family:var(--mono);font-size:10px;">${l}</span>
+          <span style="font-family:var(--mono);color:var(--text);">${v}</span>
+        </div>
+      `).join('')}
+    </div>`;
+
+  // Keyword frequency bars
+  const kw = d.keyword_frequency;
+  const maxVal = Math.max(...Object.values(kw), 1);
+  $('kwList').innerHTML = Object.entries(kw).map(([word, cnt]) => `
+    <div class="kw-row">
+      <div class="kw-word">${word}</div>
+      <div class="kw-bar-wrap"><div class="kw-bar" style="width:${(cnt/maxVal*100).toFixed(1)}%"></div></div>
+      <div class="kw-count">${cnt}</div>
+    </div>`).join('');
+
+  // File preview
+  if (d.file_extracted_text_preview) {
+    $('filePreviewBlock').style.display = 'block';
+    $('filePreview').textContent = d.file_extracted_text_preview;
+  } else {
+    $('filePreviewBlock').style.display = 'none';
+  }
+
+  // Raw JSON
+  $('rawJson').textContent = JSON.stringify({
+    word_count: d.word_count,
+    sentence_count: d.sentence_count,
+    technical_terms: d.technical_terms,
+    action_verbs: d.action_verbs,
+    sections_detected: d.sections_detected,
+    complexity: d.complexity,
+    technical_density: d.technical_density,
+    clarity_score: d.clarity_score,
+    signals: d.signals
+  }, null, 2);
+}
+</script>
+</body>
+</html>

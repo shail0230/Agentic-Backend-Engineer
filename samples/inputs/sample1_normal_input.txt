@@ -1,0 +1,7 @@
+Objective: Build a deterministic data ingestion pipeline using FastAPI.
+Requirements:
+- Accept text input and optional file upload (PDF or JSON)
+- Extract technical terms, action verbs, and keyword frequency
+- Detect sections such as Objective, Input, Output, Constraint
+- Return a structured JSON output with complexity and clarity scores
+The pipeline must handle edge cases including empty input, invalid file types, and malformed text.

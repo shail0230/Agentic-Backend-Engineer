@@ -1,0 +1,45 @@
+{
+  "edge_case_1": {
+    "description": "Empty text — caught before pipeline runs",
+    "input": { "text": "   " },
+    "output": {
+      "status_code": 400,
+      "detail": "Text input cannot be empty."
+    }
+  },
+  "edge_case_2": {
+    "description": "Invalid file type (.xlsx) — rejected at validation",
+    "input": { "text": "Some task", "file": "report.xlsx" },
+    "output": {
+      "status_code": 400,
+      "detail": "Only PDF or JSON files are supported."
+    }
+  },
+  "edge_case_3": {
+    "description": "Empty file uploaded (0 bytes)",
+    "input": { "text": "Some task", "file": "empty.pdf (0 bytes)" },
+    "output": {
+      "status_code": 400,
+      "detail": "Uploaded file is empty."
+    }
+  },
+  "edge_case_4": {
+    "description": "Malformed JSON file — pipeline continues on text only",
+    "input": { "text": "Process this config", "file": "broken.json with syntax error" },
+    "output": {
+      "file_processed": "json",
+      "file_extracted_text_preview": "[JSON extraction error: ...]",
+      "note": "Pipeline still runs on text input. File error is surfaced in preview field."
+    }
+  },
+  "edge_case_5": {
+    "description": "Very long input (300+ words)",
+    "input": { "text": "Build and implement a scalable... (300+ words)" },
+    "output": {
+      "complexity": "high",
+      "signals": {
+        "input_length_category": "long"
+      }
+    }
+  }
+}

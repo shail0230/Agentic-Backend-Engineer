@@ -1,0 +1,63 @@
+{
+  "word_count": 61,
+  "sentence_count": 2,
+  "keyword_frequency": {
+    "input": 3,
+    "objective": 2,
+    "pipeline": 2,
+    "text": 2,
+    "file": 2,
+    "json": 2,
+    "output": 2,
+    "build": 1,
+    "deterministic": 1,
+    "data": 1,
+    "ingestion": 1,
+    "using": 1,
+    "fastapi": 1,
+    "requirements": 1,
+    "accept": 1
+  },
+  "technical_terms": [
+    "complexity",
+    "deterministic",
+    "fastapi",
+    "ingestion",
+    "json",
+    "pipeline"
+  ],
+  "action_verbs": [
+    "accept",
+    "build",
+    "detect",
+    "extract",
+    "handle",
+    "return"
+  ],
+  "sections_detected": [
+    "constraint",
+    "error",
+    "input",
+    "objective",
+    "output",
+    "requirement"
+  ],
+  "step_patterns": {
+    "numbered_steps": 0,
+    "bulleted_items": 4,
+    "arrow_flows": 0,
+    "has_steps": true
+  },
+  "complexity": "medium",
+  "technical_density": 0.0984,
+  "clarity_score": 10.0,
+  "file_processed": null,
+  "file_extracted_text_preview": null,
+  "signals": {
+    "has_technical_content": true,
+    "has_action_items": true,
+    "is_structured": true,
+    "has_step_patterns": true,
+    "input_length_category": "short"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "task": "Build a classification pipeline",
+  "requirements": [
+    "extract features",
+    "train model",
+    "deploy endpoint"
+  ],
+  "tech_stack": ["fastapi", "sklearn", "docker"],
+  "constraints": "Must be deterministic, no randomness"
+}
